@@ -61,10 +61,11 @@ Drupal.fbconnect.logout = function() {
 
 Drupal.fbconnect.reloadIfUserConnected = function(state) {
   var user = Drupal.settings.fbconnect.user;
-
+  
   if (!state.authResponse || user.uid) {
     return;
   }
+  
   if (state.authResponse.uid != user.fbuid) {
     window.location.reload();
   }
@@ -90,7 +91,7 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
     
     FB.getLoginStatus(function(response) {
       if (response.authResponse) {
-        // User is ogged in and connected to facebook.
+        // User is logged in and connected to facebook.
         var fbuid = response.authResponse.userID;
       } 
       else {
