@@ -99,7 +99,7 @@ function fbconnect_block_view($delta = '') {
     case 'fbconnect_login':
       if ($user->uid) {
         return;
-      }    
+      }
       $block['subject'] = t('Facebook Login');
       $block['content'] = fbconnect_render_button();
     break;
@@ -371,12 +371,12 @@ function facebook_client_load_include() {
   if  (class_exists('Facebook') && defined('Facebook::VERSION')) {
     return TRUE;
   }
-  throw new Exception('Facebook library not found.');  
+  throw new Exception('Facebook library not found.');
 }
 
 /**
  * Get the facebook client object for easy access.
- * 
+ *
  * @return
  *   Facebook API object.
  */
@@ -415,7 +415,7 @@ function fbconnect_user_profile() {
     try {
       // Proceed knowing you have a logged in user who's authenticated.
       $user_profile = $client->api('/me');
-    } 
+    }
     catch (FacebookApiException $e) {
       $user_profile = NULL;
     }
@@ -486,7 +486,7 @@ function fbconnect_get_fbuid($check_connected = FALSE) {
     }
     return $fbuid;
   }
-  
+
   return FALSE;
 }
 
@@ -505,7 +505,7 @@ function fbconnect_render_js() {
       'uid' => $user->uid,
       'fbuid' => !empty($user->fbuid) ? $user->fbuid : FALSE,
     );
-    
+
     $module_path = drupal_get_path('module', 'fbconnect');
     drupal_add_js(array('fbconnect' => $config), array('type' => 'setting'));
     drupal_add_js($module_path . '/fbconnect.js');
@@ -668,12 +668,16 @@ function _get_user_fbuid($uid) {
 /**
  * Store user into table fbconnect
  *
- * @param Int $uid
- *   Drupal user id
- * @param Int $fbuid
- *   Facebook user id
+ * @param $uid
+ *   Drupal user ID.
+ * @param $fbuid
+ *   Facebook user ID.
+ * @param $fb_avatar
+ *   Optional; TRUE if Facebook avatar should be used for the user. If no
+ *   value is passed, it will be decided by the defined settings of the
+ *   user pictures.
  */
-function fbconnect_register($uid, $fbuid) {
+function fbconnect_register($uid, $fbuid, $fb_avatar = NULL) {
   if (_get_user_fbuid($uid)) {
     return FALSE;
   }
@@ -696,7 +700,18 @@ function fbconnect_register($uid, $fbuid) {
   $account = user_load($uid);
   $account->fbuid = $fbuid;
 
-  user_save($account, array('fbuid' => $fbuid));
+  if (!isset($fb_avatar)) {
+    $conf = fbconnect_get_config();
+    $fb_avatar = $conf['user_pictures'] == 'allow';
+  }
+
+  $edit = array(
+    'fbuid' => $fbuid,
+    'data' => array(
+      'fb_avatar' => $fb_avatar,
+    ),
+  );
+  user_save($account, $edit);
   module_invoke('rules', 'invoke_event', 'fbconnect_user_registered', $account);
 
   watchdog(
@@ -830,7 +845,7 @@ function fbconnect_graph_query($path, $params = array()) {
 
 /**
  *  Check the users table to see if the email is already in Drupal.
- * 
+ *
  * @return
  *  The user ID with user email, or empty array.
  */
@@ -997,7 +1012,7 @@ function theme_fbconnect_login_button($variables) {
     $url = url('fbconnect/register/create');
     $title = t('Hello %name', array('%name' => $user_profile['name']));
     $desc = t('Login to this site using your Facebook credentials.');
-    $link = '<a href="' . $url . '" class="fb_button fb_button_' . $attr['size'] . '"><span class="fb_button_text">' . $text . '</span></a>';    
+    $link = '<a href="' . $url . '" class="fb_button fb_button_' . $attr['size'] . '"><span class="fb_button_text">' . $text . '</span></a>';
     return '<h3>' . $title . '</h3>' . $desc . $link;
   }
   else {
