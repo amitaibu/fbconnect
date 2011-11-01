@@ -272,20 +272,20 @@ function fbconnect_form_alter(&$form, $form_state, $form_id) {
  * @param mixed $form_state
  */
 function fbconnect_add_user_afterlogin_submit($form, &$form_state) {
-    global $user;
-    $data = fbconnect_get_user_info(array('name', 'email'));
-    //user not logged into facebook we dont have any information for them, let them log in again
-    if (empty($data)) {
-        return facebook_login_page($form, $form_state);
-    }
-    $uid = _email_already_exist($data['email']);
-    if ($uid == $user->uid) {
-        //add this user to the fbconnect_users table
-        fbconnect_register($user->uid, $data['id']);
-    }
-    else {
-        drupal_set_message(t('You have loged into the website with an account that does not have the same email as your facebook account'));
-    }
+  global $user;
+  $data = fbconnect_get_user_info(array('name', 'email'));
+  //user not logged into facebook we dont have any information for them, let them log in again
+  if (empty($data)) {
+      return facebook_login_page($form, $form_state);
+  }
+  $uid = _email_already_exist($data['email']);
+  if ($uid == $user->uid) {
+    //add this user to the fbconnect_users table
+    fbconnect_register($user->uid, $data['id']);
+  }
+  else {
+    drupal_set_message(t('You have loged into the website with an account that does not have the same email as your facebook account'));
+  }
 }
 
 /**
