@@ -239,19 +239,26 @@ function facebook_login_page(&$form, $form_state = array()) {
     return $form;
 }
 function _fbconnect_get_username($name_suggestion) {
-  $query = "SELECT COUNT(name) FROM {users} WHERE name = ':user_name'";
-  $result = db_query($query, array('user_name' => $name_suggestion))->fetchField();
-  if ($result['name'] != 0) {
-    $counter = variable_get('fbconnect_namecounter', 1);
-    $newname = 'fbuser' . $counter;
-    $counter++;
-    variable_set('fbconnect_namecounter', $counter);
+  $no_match = TRUE;
+  $counter = 0;
+  $newname = $name_suggestion;
+
+  while ($no_match) {
+    $query = "SELECT COUNT(name) FROM {users} WHERE name = :user_name";
+    $result = db_query($query, array(':user_name' => $newname))->fetchField();
+    if ($result) {
+      // Name was found so increment the counter.
+      $counter++;
+      $newname =  $name_suggestion . '_' . $counter;
+    }
+    else {
+      $no_match = FALSE;
+    }
   }
-  else {
-    $newname = $name_suggestion;
-  }
+
   return $newname;
 }
+
 function fbconnect_register_form_validate($form, &$form_state) {
   $fbuid = fbconnect_get_fbuid();
   //make sure we have a facebook user object by the time we get here otherwise drop form and exit with error message

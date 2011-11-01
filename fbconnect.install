@@ -28,7 +28,7 @@ function fbconnect_requirements($phase) {
 
   if ($phase == 'runtime') {
     drupal_load('module', 'fbconnect');
-    _facebook_client_load_include();
+    facebook_client_load_include();
 
     $requirements['facebook-php-sdk']['title'] = $t('Facebook PHP sdk');
     if (!class_exists('Facebook')) {

@@ -376,8 +376,9 @@ function facebook_client_load_include() {
 
 /**
  * Get the facebook client object for easy access.
- * @return Facebook
- *   Facebook Api object
+ * 
+ * @return
+ *   Facebook API object.
  */
 function facebook_client() {
   $fb = &drupal_static(__FUNCTION__, NULL);
