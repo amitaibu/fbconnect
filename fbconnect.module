@@ -368,7 +368,10 @@ function facebook_client_load_include() {
       watchdog('fbconnect', t('Unable to load the required Facebook library, please check the README.txt for instructions on how to resolve this.'));
     }
   }
-  return class_exists('Facebook') && defined('Facebook::VERSION');
+  if  (class_exists('Facebook') && defined('Facebook::VERSION')) {
+    return TRUE;
+  }
+  throw new Exception('Facebook library not found.');  
 }
 
 /**
