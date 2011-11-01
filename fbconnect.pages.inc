@@ -24,58 +24,9 @@ function fbconnect_prompt_page() {
     ));
   }
   $items = array('items' => array(l($reg_msg, 'fbconnect/register/create', $reg_attr), l($link_msg, 'user', array('query' => array('destination' => 'fbconnect/link')))));
-  /*
-  $links = array(
-    array(
-      'title' => $reg_msg,
-      'href' => 'fbconnect/register/create',
-      $reg_attr,
-    ),
-    array(
-      'title' => $link_msg,
-      'href' => 'user',
-      array('attributes' => array('query' => 'destination=fbconnect/link')),
-    ),
-  );
-  */
-
-  //return /*theme('links', array('links' => fbconnect_prompt_page_links))*/
+  
   return theme('item_list', $items);
 }
-
-/*
-function fbconnect_prompt_page_links() {
-  $conf = fbconnect_get_config();
-  $params = array(
-    '!site_name' => $conf['invite_name'],
-  );
-  $reg_msg = t('Click here to create a new !site_name account with Facebook', $params);
-  $link_msg = t('Click here to connect your existing !site_name account with Facebook', $params);
-
-  $reg_attr = array();
-  if ($conf['fast_reg_mode']) {
-    $reg_attr = array('attributes' => array(
-      'onclick' => 'Drupal.fbconnect.DoFastRegistration(this); return false;'
-    ));
-  }
-
-  $links = array(
-    array(
-      'title' => $reg_msg,
-      'href' => 'fbconnect/register/create',
-      $reg_attr,
-    ),
-    array(
-      'title' => $link_msg,
-      'href' => 'user',
-      array('attributes' => array('query' => 'destination=fbconnect/link')),
-    ),
-  );
-
-  return $links;
-}
-*/
-
 
 /**
  * Menu callback.

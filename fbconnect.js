@@ -110,6 +110,11 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
   });
 };
 
+/**
+ * Fast registration.
+ * 
+ * @see fbconnect_prompt_page().
+ */
 Drupal.fbconnect.DoFastRegistration =  function(link) {
   FB.login(function(response) {
     if (response.authResponse && response.status == 'connected') {
@@ -121,21 +126,6 @@ Drupal.fbconnect.DoFastRegistration =  function(link) {
     }
   }, {scope:'email'});
 };
-
-
-/**
- * This function which gets called when visitor is logged in using their 
- * facebook login., thanks to the following markup:
- * 
- * <fb:login-button onlogin="facebook_onlogin_ready();"></fb:login-button>
- */
-function facebook_onlogin_ready() {
-  // http://github.com/facebook/connect-js/issues/194
-  if (!FB.getAuthResponse()) {
-    return;
-  }
-  jQuery("#fbconnect-autoconnect-form").submit();
-}
 
 /**
  * Create a dialog.
