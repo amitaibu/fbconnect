@@ -23,24 +23,40 @@ Drupal.fbconnect.init = function () {
 
   if (Drupal.settings.fbconnect.loginout_mode == 'auto') {
     FB.Event.subscribe('auth.authResponseChange', Drupal.fbconnect.reloadIfUserConnected);
-//    FB.Event.subscribe('auth.login', function(response) {
-//      console.log('event auth.login');
-//    });
+  }
+  
+  if (Drupal.settings.fbconnect.loginout_mode == 'ask') {
+    FB.Event.subscribe('auth.logout', Drupal.fbconnect.logout);
   }
 
   Drupal.behaviors.fbconnect(document);
 }
 
-Drupal.fbconnect.logout = function(keep_fbaccount_logged) {
-  var logout_url = Drupal.settings.basePath + 'user/logout';
-  if (!keep_fbaccount_logged) {
-    FB.logout(function(response) {
-      window.location.href = logout_url;
-    });
-  }
-  else {
-    window.location.href = logout_url;
-  }
+
+Drupal.fbconnect.logout = function() {
+  var t_args  = {'!site_name' : Drupal.settings.fbconnect.invite_name};
+  var buttons = [
+      {
+        'label': Drupal.t('Facebook and !site_name', t_args),
+        'click': function() {
+          this.close();
+          Drupal.fbconnect.logout();
+        }
+      }, {
+        'name': 'cancel',
+        'label': Drupal.t('!site_name Only', t_args),
+        'click': function() {
+          this.close();
+          Drupal.fbconnect.logout(true);
+        }
+      }
+  ];
+
+  var dialog = new Drupal.fbconnect.PopupDialog({
+    'title'   : Drupal.t('Logout'),
+    'message' : Drupal.t('Do you also want to logout from your Facebook account?'),
+    'buttons' : buttons
+  });
 }
 
 Drupal.fbconnect.reloadIfUserConnected = function(state) {
@@ -59,46 +75,38 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
   var user          = Drupal.settings.fbconnect.user;
   var basePath      = Drupal.settings.basePath;
   var logout_url    = basePath + 'user/logout';
-  var links         = jQuery('a[href='+ logout_url +']', context).not('.logout_link_inited');
+  var links         = jQuery('a[href='+ logout_url +']', context).not('.fbconnect-logout-link');
 
   if (loginout_mode == 'manual') {
     return;
   }
-
-  links.addClass('logout_link_inited').bind('click',function() {
-    var fbuid = FB.getAuthResponse() && FB.getAuthResponse().uid;
-
-    if (!user.fbuid || user.fbuid != fbuid) return;
+  
+  if (!user.uid) {
+    // User is anonymous.
+    return;
+  }
+  
+  links.addClass('fbconnect-logout-link').bind('click',function() {
+    
+    FB.getLoginStatus(function(response) {
+      if (response.authResponse) {
+        // User is ogged in and connected to facebook.
+        var fbuid = response.authResponse.userID;
+      } 
+      else {
+        // No user session available.
+        return;
+      }
+    });    
+    
     if (loginout_mode == 'auto') {
-      Drupal.fbconnect.logout();
+      // Logout from Facebook.
+      FB.logout();
     }
-    else if (loginout_mode == 'ask') {
-      var t_args  = {'!site_name' : Drupal.settings.fbconnect.invite_name};
-      var buttons = [
-          {
-            'label': Drupal.t('Facebook and !site_name', t_args),
-            'click': function() {
-              this.close();
-              Drupal.fbconnect.logout();
-            }
-          }, {
-            'name': 'cancel',
-            'label': Drupal.t('!site_name Only', t_args),
-            'click': function() {
-              this.close();
-              Drupal.fbconnect.logout(true);
-            }
-          }
-      ];
-
-      var dialog = new Drupal.fbconnect.PopupDialog({
-        'title'   : Drupal.t('Logout'),
-        'message' : Drupal.t('Do you also want to logout from your Facebook account?'),
-        'buttons' : buttons
-      });
+    else {
+      // Disable link.
+      return false;  
     }
-
-    return false;
   });
 };
 
