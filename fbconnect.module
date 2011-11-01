@@ -1016,7 +1016,7 @@ function theme_fbconnect_login_button($variables) {
     return '<h3>' . $title . '</h3>' . $desc . $link;
   }
   else {
-    $button = '<fb:login-button ' . drupal_attributes($attr) . '>' . $text . '</fb:login-button>';
+    $button = '<fb:login-button ' . drupal_attributes($attr) . ' scope="email">' . $text . '</fb:login-button>';
     return $button;
   }
 }
