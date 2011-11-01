@@ -97,19 +97,20 @@ function fbconnect_login_page($form, $form_state = array()) {
     drupal_set_message('You have been successfully logged in.');
     drupal_goto('user/' . $user_id);
   }
-  elseif ( _email_allready_exist($data['email'])) {
+  elseif ( _email_already_exist($data['email'])) {
     // The user was not found in the fbconnect_users table, but the emial from facebook might allready have an account on coracle.
     // Redirect user to the login page with a message.
     drupal_set_message(t('This email address is allready registered to an account. Please log in to this account with the username and password provided during registration'));
-    $options = array('query' => array(
-      'fbconnect' => 'true'
-    ));
+    $options = array(
+      'query' => array(
+        'fbconnect' => TRUE,
+      ),
+    );
     drupal_goto('user/login', $options);
   }
   else {
-    drupal_set_message('You do not have an account with this site. Create an account on this site with through facebook !here', array('!here' => l('fbconnect/register/create')));
+    drupal_set_message(t('You do not have an account with this site. Create an account on this site with through facebook !link.', array('!link' => l('fbconnect/register/create'))));
   }
-
 }
 
 /**
@@ -130,7 +131,7 @@ function fbconnect_register_page($form, $form_state = array()) {
     $form_state['uid'] = $uid;
     user_login_submit($form, $form_state);
   }
-  elseif (_email_allready_exist($data['email'])) {
+  elseif (_email_already_exist($data['email'])) {
     // The user was not found in the fbconnect_users table, but the
     // email from facebook might already have an account.
     // Redirect user to the login page with a message..

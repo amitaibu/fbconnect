@@ -92,10 +92,14 @@ function fbconnect_block_info() {
  * Implements hook_block_view().
  */
 function fbconnect_block_view($delta = '') {
+  global $user;
   $block = array();
 
   switch ($delta) {
     case 'fbconnect_login':
+      if ($user->uid) {
+        return;
+      }    
       $block['subject'] = t('Facebook Login');
       $block['content'] = fbconnect_render_button();
     break;
@@ -241,7 +245,7 @@ function fbconnect_form_alter(&$form, $form_state, $form_id) {
         $form['#submit'][] = 'fbconnect_redirect_submit';
       }
       // Check if there is a get paramater set(fbconnect=true)
-      if (isset($_GET['fbconnect']) && $_GET['fbconnect'] == 'true') {
+      if (isset($_GET['fbconnect']) && $_GET['fbconnect'] == TRUE) {
         // Add a function callback to call after user is loged in
         $form['#submit'][] = 'fbconnect_add_user_afterlogin_submit';
       }
@@ -274,7 +278,7 @@ function fbconnect_add_user_afterlogin_submit($form, &$form_state) {
     if (empty($data)) {
         return facebook_login_page($form, $form_state);
     }
-    $uid = _email_allready_exist($data['email']);
+    $uid = _email_already_exist($data['email']);
     if ($uid == $user->uid) {
         //add this user to the fbconnect_users table
         fbconnect_register($user->uid, $data['id']);
@@ -323,25 +327,22 @@ function fbconnect_render_button($attr = array(), $op = null) {
 }
 
 /**
- *  add Libraries API support, see: http://drupal.org/project/libraries
- *  implement hook_libraries_info()
+ * Implements hook_libraries_info().
  */
 function fbconnect_libraries_info() {
-  // Returns an associative array, with information about external library
   $libraries['facebook-php-sdk'] = array(
     'name' => 'Facebook PHP SDK',
     'vendor url' => 'https://github.com/facebook/php-sdk',
     'download url' => 'https://github.com/facebook/php-sdk/tarball/v3.1.1',
     'version arguments' => array(
       'file' => 'readme.md',
-      // Best practice: Document the actual version strings for later reference.
-      // 3.1.1:  Facebook PHP SDK (v.3.1.1), filters for 3.x.x versions
-      'pattern' => '/Facebook PHP SDK \(v.3.\d.\d\)/',
+      // 3.1.1:  Facebook PHP SDK (v.3.1.1), filters for 3.x.x versions.
+      'pattern' => '/Facebook PHP SDK \(v.(3.\d.\d)\)/',
       'lines' => 10,
     ),
-    // supported library version, including relevant files
+    // Supported library version, including relevant files
     'versions' => array(
-      'Facebook PHP SDK (v.3.1.1)' => array(
+      '3.1.1' => array(
         'files' => array(
           'php' => array(
             'src/base_facebook.php',
@@ -355,9 +356,9 @@ function fbconnect_libraries_info() {
 }
 
 /**
- * It locates and loads the Facebook PHP SDK library
+ * Locate and load the Facebook PHP SDK library
  */
-function _facebook_client_load_include() {
+function facebook_client_load_include() {
   if (!class_exists('Facebook')) {
     module_load_include('module', 'libraries');
     $library = libraries_load('facebook-php-sdk');
@@ -376,12 +377,12 @@ function _facebook_client_load_include() {
  *   Facebook Api object
  */
 function facebook_client() {
-  static $fb = NULL;
+  $fb = &drupal_static(__FUNCTION__, NULL);
 
   if (is_null($fb)) {
     $conf = fbconnect_get_config();
 
-    if ($conf && _facebook_client_load_include()) {
+    if ($conf && facebook_client_load_include()) {
       $initParams = array(
         'appId' => $conf['app_id'],
         'secret' => $conf['secret_api_key'],
@@ -389,7 +390,7 @@ function facebook_client() {
 
       $fb = new Facebook($initParams);
 
-      // hack for #902542
+      // Hack for http://drupal.org/node/902542, to support SSL.
       Facebook::$CURL_OPTS[CURLOPT_SSL_VERIFYPEER] = FALSE;
       Facebook::$CURL_OPTS[CURLOPT_SSL_VERIFYHOST] = 2;
     }
@@ -403,15 +404,16 @@ function facebook_client() {
  * @return user_profile array
  */
 function fbconnect_user_profile() {
-  $user_profile = null;
+  $user_profile = NULL;
   $client = facebook_client();
   $user = $client->getUser();
   if ($user) {
     try {
       // Proceed knowing you have a logged in user who's authenticated.
       $user_profile = $client->api('/me');
-    } catch (FacebookApiException $e) {
-      $user_profile = null;
+    } 
+    catch (FacebookApiException $e) {
+      $user_profile = NULL;
     }
   }
   return $user_profile;
@@ -423,7 +425,7 @@ function fbconnect_user_profile() {
  */
 function fbconnect_get_config() {
   global $base_url;
-  static $config;
+  $config = &drupal_static(__FUNCTION__, FALSE);
 
   if (!$config) {
     $config['user_pictures'] = variable_get('fbconnect_pic_allow', 'allow');
@@ -455,16 +457,17 @@ function fbconnect_get_config() {
   if ($config['app_id'] && $config['secret_api_key']) {
     return $config;
   }
+  return FALSE;
 }
 
 /**
  * Check facebook session.
  *
- * @param boolean $check_connected
- *   ensure that active user is connected with active facebook account
+ * @param $check_connected
+ *   ensure that active user is connected with active facebook account.
  *
- * @return integer
- *   facebook user id
+ * @return
+ *   Facebook user ID.
  */
 function fbconnect_get_fbuid($check_connected = FALSE) {
   global $user;
@@ -477,12 +480,10 @@ function fbconnect_get_fbuid($check_connected = FALSE) {
         $fbuid = NULL;
       }
     }
-
     return $fbuid;
   }
-  else {
-    return 0;
-  }
+  
+  return FALSE;
 }
 
 /**
@@ -492,16 +493,17 @@ function fbconnect_render_js() {
   global $base_url;
   global $user;
   $user->fbuid = _get_user_fbuid($user->uid);
-  $module_path = drupal_get_path('module', 'fbconnect');
 
   if ($config = fbconnect_get_config()) {
     unset($config['secret_api_key']);
     $config['fbuid'] = fbconnect_get_fbuid();
     $config['user'] = array(
       'uid' => $user->uid,
-      'fbuid' => @$user->fbuid,
+      'fbuid' => !empty($user->fbuid) ? $user->fbuid : FALSE,
     );
-    drupal_add_js(array('fbconnect' => $config), array('type' => 'setting', 'scope' => JS_DEFAULT));
+    
+    $module_path = drupal_get_path('module', 'fbconnect');
+    drupal_add_js(array('fbconnect' => $config), array('type' => 'setting'));
     drupal_add_js($module_path . '/fbconnect.js');
     drupal_add_css($module_path . '/fbconnect.css');
   }
@@ -594,7 +596,7 @@ function fbconnect_autoconnect_form_submit($form, &$form_state) {
 
     if (!$uid) {
       if (variable_get('fbconnect_reg_options', 0) == 1) {
-        if ($uid_from_email = _email_allready_exist($data['email'])) {
+        if ($uid_from_email = _email_already_exist($data['email'])) {
           // Connect facebook to the existing account, and login the user.
           fbconnect_register($uid_from_email, $data['id']);
           $form_state['uid'] = $uid_from_email;
@@ -823,10 +825,12 @@ function fbconnect_graph_query($path, $params = array()) {
 }
 
 /**
- * Check the users table to see if the email is allready in the drupal system
- *  returns uid of user with the email
+ *  Check the users table to see if the email is already in Drupal.
+ * 
+ * @return
+ *  The user ID with user email, or empty array.
  */
-function _email_allready_exist($email) {
+function _email_already_exist($email) {
     $query = db_select('users', 'u');
     $query->fields('u', array('uid'));
     $query->condition('mail', $email, '=');

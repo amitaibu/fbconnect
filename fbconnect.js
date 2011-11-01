@@ -1,16 +1,28 @@
-// $Id: fbconnect.js,v 1.4 2010/03/21 16:26:03 vectoroc Exp $
+(function ($) {
+
+/**
+ * Bind init functions it facebook init.
+ */
+$(document).ready(function() {
+  $(document).bind('fb:init', Drupal.fbconnect.init);
+}); 
+
 
 Drupal.fbconnect = Drupal.fbconnect || {};
 Drupal.fbconnect.init = function () {
   Drupal.behaviors.fbconnect = function(context) {
     if (context != document) {
-      jQuery(context).each(function() { FB.XFBML.parse(this); });
+      jQuery(context).each(function() { 
+        // Parse the document
+        // http://developers.facebook.com/docs/reference/javascript/FB.XFBML.parse/
+        FB.XFBML.parse(this); 
+      });
     }
     Drupal.fbconnect.initLogoutLinks(context);
   }
 
   if (Drupal.settings.fbconnect.loginout_mode == 'auto') {
-    FB.Event.subscribe('auth.authResponseChange', Drupal.fbconnect.reload_ifUserConnected);
+    FB.Event.subscribe('auth.authResponseChange', Drupal.fbconnect.reloadIfUserConnected);
 //    FB.Event.subscribe('auth.login', function(response) {
 //      console.log('event auth.login');
 //    });
@@ -31,10 +43,12 @@ Drupal.fbconnect.logout = function(keep_fbaccount_logged) {
   }
 }
 
-Drupal.fbconnect.reload_ifUserConnected = function(state) {
+Drupal.fbconnect.reloadIfUserConnected = function(state) {
   var user = Drupal.settings.fbconnect.user;
 
-  if (!state.authResponse || user.uid) return;
+  if (!state.authResponse || user.uid) {
+    return;
+  }
   if (state.authResponse.uid != user.fbuid) {
     window.location.reload();
   }
@@ -47,7 +61,9 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
   var logout_url    = basePath + 'user/logout';
   var links         = jQuery('a[href='+ logout_url +']', context).not('.logout_link_inited');
 
-  if (loginout_mode == 'manual') return;
+  if (loginout_mode == 'manual') {
+    return;
+  }
 
   links.addClass('logout_link_inited').bind('click',function() {
     var fbuid = FB.getAuthResponse() && FB.getAuthResponse().uid;
@@ -99,6 +115,12 @@ Drupal.fbconnect.DoFastRegistration =  function(link) {
 };
 
 
+/**
+ * This function which gets called when visitor is logged in using their 
+ * facebook login., thanks to the following markup:
+ * 
+ * <fb:login-button onlogin="facebook_onlogin_ready();"></fb:login-button>
+ */
 function facebook_onlogin_ready() {
   // http://github.com/facebook/connect-js/issues/194
   if (!FB.getAuthResponse()) {
@@ -283,4 +305,4 @@ Drupal.theme.prototype.fbml_profile_pic = function(fbuid, options) {
   return output.join('');
 };
 
-jQuery(document).bind('fb:init', Drupal.fbconnect.init);
+})(jQuery);

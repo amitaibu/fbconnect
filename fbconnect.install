@@ -44,14 +44,6 @@ function fbconnect_requirements($phase) {
     else {
       $requirements['facebook-php-sdk']['value'] = l(constant('Facebook::VERSION'), 'http://github.com/facebook/php-sdk', array('external' => TRUE));
       $requirements['facebook-php-sdk']['severity'] = REQUIREMENT_OK;
-
-      //      $sdk_include_path_1 = drupal_get_path('module', 'fbconnect') .'/facebook-php-sdk/src/facebook.php';
-      //      $sdk_include_path_2 = module_invoke('libraries', 'get_path', 'facebook-php-sdk') .'/src/facebook.php';
-      //
-      //      if (!file_exists($sdk_include_path_1) || !file_exists($sdk_include_path_2)) {
-      //        $requirements['facebook-php-sdk']['severity'] = REQUIREMENT_WARNING;
-      //        $requirements['facebook-php-sdk']['value'] .= ' '. $t('You installed Facebook PHP sdk in deprecated path. See README.txt');
-      //      }
     }
 
     if (!fbconnect_get_config()) {
@@ -146,7 +138,7 @@ function fbconnect_schema_alter(&$schema) {
 }
 
 /**
- * Extend maximum email length to 320 chars
+ * Extend maximum email length to 320 chars.
  */
 function _fbconnect_change_user_mail_field($action = 'install') {
   $schema = array('users' => drupal_get_schema('users'));
