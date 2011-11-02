@@ -25,15 +25,28 @@ Drupal.fbconnect.init = function () {
     FB.Event.subscribe('auth.authResponseChange', Drupal.fbconnect.reloadIfUserConnected);
   }
   
-  if (Drupal.settings.fbconnect.loginout_mode == 'ask') {
-    FB.Event.subscribe('auth.logout', Drupal.fbconnect.logout);
-  }
-
   Drupal.behaviors.fbconnect(document);
 }
 
 
 Drupal.fbconnect.logout = function() {
+  $('#fbconnect-logout-dialog')
+    .removeClass('element-invisible')
+    .dialog(
+      { 
+        buttons: { 
+          "Yes": function() {
+            FB.logout(); 
+            window.location.href = Drupal.settings.basePath + 'user/logout';
+          },
+          "No": function() {
+            window.location.href = Drupal.settings.basePath + 'user/logout';
+          } 
+        } 
+      }      
+    );
+  return;
+  
   var t_args  = {'!site_name' : Drupal.settings.fbconnect.invite_name};
   var buttons = [
       {
@@ -77,7 +90,7 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
   var basePath      = Drupal.settings.basePath;
   var logout_url    = basePath + 'user/logout';
   var links         = jQuery('a[href='+ logout_url +']', context).not('.fbconnect-logout-link');
-
+  
   if (loginout_mode == 'manual') {
     return;
   }
@@ -85,6 +98,10 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
   if (!user.uid) {
     // User is anonymous.
     return;
+  }
+  
+  if (!user.fbuid) {
+    // User is not related to facebook.
   }
   
   links.addClass('fbconnect-logout-link').bind('click',function() {
@@ -103,9 +120,11 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
     if (loginout_mode == 'auto') {
       // Logout from Facebook.
       FB.logout();
+      window.location.href = Drupal.settings.basePath + 'user/logout';
     }
     else {
       // Disable link.
+      Drupal.fbconnect.logout();
       return false;  
     }
   });

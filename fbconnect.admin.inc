@@ -104,8 +104,9 @@ function fbconnect_appearance_settings($form, &$form_state) {
     '#options' => array(
       'manual' => t('Manual'),
       'auto'   => t('Auto login/logout'),
+      'ask'    => t('Ask'),
     ),
-    '#default_value' => variable_get('fbconnect_loginout_mode', FALSE),
+    '#default_value' => variable_get('fbconnect_loginout_mode', 'ask'),
     '#description' => t("Login to Drupal/logout from facebook. Enable this if you don't want to logout automatically from facebook."),
   );
 

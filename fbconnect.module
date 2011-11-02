@@ -152,9 +152,10 @@ function fbconnect_theme() {
  * Implements hook_init().
  */
 function fbconnect_init() {
+  global $user;
   fbconnect_render_js();
   $config = fbconnect_get_config();
-  if ($config && facebook_client() && user_is_anonymous()) {
+  if (!$user->uid && $config && facebook_client()) {
     if ($config['loginout_mode'] == 'auto') {
       $fbuid = fbconnect_get_fbuid();
       if ($fbuid && _is_fbconnect_user($fbuid) && fbconnect_user_profile()) {
@@ -532,6 +533,17 @@ function fbconnect_page_alter(&$page) {
       // user has just approved the site, but is still not logged in.
       $page['page_bottom']['fn_autoconnect'] = drupal_get_form('fbconnect_autoconnect_form');
     }
+    elseif ($user->uid && $config['loginout_mode'] == 'ask') {
+      // Add jQuery UI dialog, so we can show logout dialog if needed.
+      drupal_add_library('system', 'ui.dialog');
+      $page['page_bottom']['fbconenct_logout_dialog'] = array(
+        '#markup' => '<div class="element-invisible" id="fbconnect-logout-dialog">' . t('Logout from facebook as-well?') . '</div>',
+        '#attributes' => array(
+          'class' => array('element-invisible'),
+          'id' => 'fbconnect-logout-dialog',
+        ),
+      );
+    }    
     $channel_uri = preg_replace("@'@msi", "\'", "http://" . $_SERVER['HTTP_HOST'] . "/" . drupal_get_path('module', 'fbconnect') . "/channel.html");
     $page['page_bottom']['fb_init_code'] = array(
       '#type' => 'markup',
