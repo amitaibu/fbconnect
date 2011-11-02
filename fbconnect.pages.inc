@@ -42,7 +42,7 @@ function fbconnect_login_page($form, $form_state = array()) {
   // Check if user has already registered with their facebook account.
   $user_id = _is_fbconnect_user($data['id']);
   if ($user_id) {
-    // User allready registered facebook account to site, log them in
+    // User already registered facebook account to site, log them in
     $form_state['uid'] = $user_id;
     user_login_submit($form, $form_state);
     drupal_set_message('You have been successfully logged in.');
@@ -58,7 +58,7 @@ function fbconnect_login_page($form, $form_state = array()) {
     else {
       // The user was not found in the fbconnect_users table, but the
       // email from facebook might already have an account.
-      // Redirect user to the login page with a message..
+      // Redirect user to the login page with a message.
       drupal_set_message(t('This email address is already registered to an account. Please log in to this account with the username and password provided during registration'));
       $options = array(
         'query' => array(

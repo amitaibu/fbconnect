@@ -128,6 +128,10 @@ Drupal.fbconnect.DoFastRegistration =  function(link) {
   }, {scope:'email'});
 };
 
+function facebook_onlogin_ready() {
+  jQuery("#fbconnect-autoconnect-form").submit();
+}
+
 /**
  * Create a dialog.
  *

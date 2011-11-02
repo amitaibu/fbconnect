@@ -321,6 +321,7 @@ function fbconnect_render_button($attr = array(), $op = null) {
   if ($op == 'register') {
     $attr += array(
       'scope' => array('email'),
+      'onlogin' => 'facebook_onlogin_ready();',
     );
   }
 
