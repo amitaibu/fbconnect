@@ -153,9 +153,9 @@ function fbconnect_theme() {
  */
 function fbconnect_init() {
   fbconnect_render_js();
-  $conf = fbconnect_get_config();
-  if ($conf && facebook_client() && user_is_anonymous()) {
-    if ($conf['loginout_mode'] == 'auto') {
+  $config = fbconnect_get_config();
+  if ($config && facebook_client() && user_is_anonymous()) {
+    if ($config['loginout_mode'] == 'auto') {
       $fbuid = fbconnect_get_fbuid();
       if ($fbuid && _is_fbconnect_user($fbuid) && fbconnect_user_profile()) {
         $form_state = array('values' => array('op' => 'connect'));
@@ -390,12 +390,12 @@ function facebook_client() {
   $fb = &drupal_static(__FUNCTION__, NULL);
 
   if (is_null($fb)) {
-    $conf = fbconnect_get_config();
+    $config = fbconnect_get_config();
 
-    if ($conf && facebook_client_load_include()) {
+    if ($config && facebook_client_load_include()) {
       $initParams = array(
-        'appId' => $conf['app_id'],
-        'secret' => $conf['secret_api_key'],
+        'appId' => $config['app_id'],
+        'secret' => $config['secret_api_key'],
       );
 
       $fb = new Facebook($initParams);
