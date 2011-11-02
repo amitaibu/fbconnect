@@ -617,9 +617,6 @@ function fbconnect_autoconnect_form_submit($form, &$form_state) {
       else {
         $form_state['redirect'] = array('fbconnect/register/prompt', drupal_get_destination());
       }
-
-      // #805846 : No linking with FB page appears, when "destination" variable exist in url
-      unset($_GET['destination']);
     }
     else {
       $account = user_load($uid);

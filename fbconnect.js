@@ -33,10 +33,6 @@ Drupal.fbconnect.init = function () {
     }     
   }
 
-  if (Drupal.settings.fbconnect.loginout_mode == 'auto') {
-    FB.Event.subscribe('auth.authResponseChange', Drupal.fbconnect.reloadIfUserConnected);
-  }
-
   Drupal.behaviors.fbconnect(document);
 }
 
@@ -85,24 +81,11 @@ Drupal.fbconnect.logout = function() {
   });
 }
 
-Drupal.fbconnect.reloadIfUserConnected = function(state) {
-  var user = Drupal.settings.fbconnect.user;
-
-  if (!state.authResponse || user.uid) {
-    return;
-  }
-
-  if (state.authResponse.uid != user.fbuid) {
-    window.location.reload();
-  }
-};
-
 Drupal.fbconnect.initLogoutLinks = function(context) {
   var loginout_mode = Drupal.settings.fbconnect.loginout_mode;
   var user          = Drupal.settings.fbconnect.user;
   var basePath      = Drupal.settings.basePath;
-  var logout_url    = basePath + 'user/logout';
-  var links         = jQuery('a[href='+ logout_url +']', context).not('.fbconnect-logout-link');
+  var links         = jQuery('a[href$=user/logout]', context).not('.fbconnect-logout-link');
 
   if (loginout_mode == 'manual') {
     return;
@@ -120,11 +103,7 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
   links.addClass('fbconnect-logout-link').bind('click',function() {
 
     FB.getLoginStatus(function(response) {
-      if (response.authResponse) {
-        // User is logged in and connected to facebook.
-        var fbuid = response.authResponse.userID;
-      }
-      else {
+      if (!response.authResponse) {
         // No user session available.
         return;
       }
@@ -137,7 +116,7 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
       });
     }
     else {
-      // Disable link.
+      // Open modal and disable link.
       Drupal.fbconnect.logout();
       return false;
     }
