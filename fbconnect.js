@@ -36,8 +36,9 @@ Drupal.fbconnect.logout = function() {
       { 
         buttons: { 
           "Yes": function() {
-            FB.logout(); 
-            window.location.href = Drupal.settings.basePath + 'user/logout';
+            FB.logout(function(response) {
+              window.location.href = Drupal.settings.basePath + 'user/logout';
+            });            
           },
           "No": function() {
             window.location.href = Drupal.settings.basePath + 'user/logout';
@@ -119,8 +120,9 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
     
     if (loginout_mode == 'auto') {
       // Logout from Facebook.
-      FB.logout();
-      window.location.href = Drupal.settings.basePath + 'user/logout';
+      FB.logout(function(response) {
+        window.location.href = Drupal.settings.basePath;
+      });
     }
     else {
       // Disable link.
