@@ -149,29 +149,6 @@ function fbconnect_theme() {
 }
 
 /**
- * Implements hook_init().
- */
-function fbconnect_init() {
-  global $user;
-  fbconnect_render_js();
-  $config = fbconnect_get_config();
-  if (!$user->uid && $config && facebook_client()) {
-    if ($config['loginout_mode'] == 'auto') {
-      $fbuid = fbconnect_get_fbuid();
-      if ($fbuid && _is_fbconnect_user($fbuid) && fbconnect_user_profile()) {
-        $form_state = array('values' => array('op' => 'connect'));
-        drupal_form_submit('fbconnect_autoconnect_form', $form_state);
-        drupal_goto($form_state['redirect']);
-      }
-    }
-  }
-  // During registration the cache is disabled
-  if (arg(0) == 'fbconnect' && arg(1) == 'register') {
-    $GLOBALS['conf']['cache'] = FALSE;
-  }
-}
-
-/**
  * Implements hook_user_cancel().
  */
 function fbconnect_user_cancel($edit, $account, $method) {
@@ -318,7 +295,7 @@ function fbconnect_render_button($attr = array(), $op = null) {
     'background' => 'dark',
     'v' => 3,
   );
-  
+
   if ($op == 'register') {
     $attr += array(
       'scope' => array('email'),
@@ -369,9 +346,7 @@ function facebook_client_load_include() {
   if (!class_exists('Facebook')) {
     module_load_include('module', 'libraries');
     $library = libraries_load('facebook-php-sdk');
-    if ($library['loaded']) {
-      watchdog('fbconnect', t('Facebook PHP SDK library loaded'));
-    } else {
+    if (!$library['loaded']) {
       watchdog('fbconnect', t('Unable to load the required Facebook library, please check the README.txt for instructions on how to resolve this.'));
     }
   }
@@ -525,13 +500,15 @@ function fbconnect_render_js() {
  */
 function fbconnect_page_alter(&$page) {
   global $user;
+  fbconnect_render_js();
   if (facebook_client() && !_fbconnect_is_excluded_page($_GET['q']) && !variable_get('fbconnect_noroot')) {
     $config = fbconnect_get_config();
     if (!$user->uid && $config['loginout_mode'] == 'auto') {
       // Add hidden form, so we can login via Javascript.
-      // This form will be submitted upon clicking "Connect" - when the 
+      // This form will be submitted upon clicking "Connect" - when the
       // user has just approved the site, but is still not logged in.
       $page['page_bottom']['fn_autoconnect'] = drupal_get_form('fbconnect_autoconnect_form');
+      $page['page_bottom']['fn_autoconnect']['#attributes'] = array('class' => array('element-invisible'));
     }
     elseif ($user->uid && $config['loginout_mode'] == 'ask') {
       // Add jQuery UI dialog, so we can show logout dialog if needed.
@@ -543,7 +520,7 @@ function fbconnect_page_alter(&$page) {
           'id' => 'fbconnect-logout-dialog',
         ),
       );
-    }    
+    }
     $channel_uri = preg_replace("@'@msi", "\'", "http://" . $_SERVER['HTTP_HOST'] . "/" . drupal_get_path('module', 'fbconnect') . "/channel.html");
     $page['page_bottom']['fb_init_code'] = array(
       '#type' => 'markup',
@@ -586,13 +563,6 @@ function fbconnect_page_alter(&$page) {
  */
 function fbconnect_autoconnect_form($form) {
   $form['#id'] = 'fbconnect-autoconnect-form';
-
-  if (arg(0) == 'user' && in_array(arg(1), array('login', 'register', 'password')) && !isset($_GET['destination'])) {
-    $form['#action'] = url('user');
-  }
-  else {
-    $form['#action'] = url($_GET['q'], array('query' => drupal_get_destination()));
-  }
 
   $form['connect'] = array(
     '#type' => 'submit',
@@ -642,7 +612,7 @@ function fbconnect_autoconnect_form_submit($form, &$form_state) {
       // #805846 : No linking with FB page appears, when "destination" variable exist in url
       unset($_GET['destination']);
     }
-    elseif ($uid) {
+    else {
       $account = user_load($uid);
       //user_external_login($account);
       $form_state['uid'] = $uid;
@@ -651,7 +621,7 @@ function fbconnect_autoconnect_form_submit($form, &$form_state) {
     }
   }
   else {
-    fbconnect_redirect_submit($form, $form_state);
+    drupal_goto();
   }
 }
 

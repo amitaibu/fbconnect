@@ -24,7 +24,7 @@ function fbconnect_prompt_page() {
     ));
   }
   $items = array('items' => array(l($reg_msg, 'fbconnect/register/create', $reg_attr), l($link_msg, 'user', array('query' => array('destination' => 'fbconnect/link')))));
-  
+
   return theme('item_list', $items);
 }
 

@@ -5,26 +5,38 @@
  */
 $(document).ready(function() {
   $(document).bind('fb:init', Drupal.fbconnect.init);
-}); 
+});
 
 
 Drupal.fbconnect = Drupal.fbconnect || {};
 Drupal.fbconnect.init = function () {
   Drupal.behaviors.fbconnect = function(context) {
     if (context != document) {
-      jQuery(context).each(function() { 
+      jQuery(context).each(function() {
         // Parse the document
         // http://developers.facebook.com/docs/reference/javascript/FB.XFBML.parse/
-        FB.XFBML.parse(this); 
+        FB.XFBML.parse(this);
       });
     }
     Drupal.fbconnect.initLogoutLinks(context);
+
+    var loginout_mode = Drupal.settings.fbconnect.loginout_mode;
+    var user          = Drupal.settings.fbconnect.user;
+
+    if (loginout_mode == 'auto' && !user.uid) {
+      FB.getLoginStatus(function(response) {
+        if (response.authResponse) {
+          // Auto-login user.
+          Drupal.fbconnect.onLogin();
+        }
+      });
+    }
   }
 
   if (Drupal.settings.fbconnect.loginout_mode == 'auto') {
     FB.Event.subscribe('auth.authResponseChange', Drupal.fbconnect.reloadIfUserConnected);
   }
-  
+
   Drupal.behaviors.fbconnect(document);
 }
 
@@ -33,21 +45,21 @@ Drupal.fbconnect.logout = function() {
   $('#fbconnect-logout-dialog')
     .removeClass('element-invisible')
     .dialog(
-      { 
-        buttons: { 
+      {
+        buttons: {
           "Yes": function() {
             FB.logout(function(response) {
               window.location.href = Drupal.settings.basePath + 'user/logout';
-            });            
+            });
           },
           "No": function() {
             window.location.href = Drupal.settings.basePath + 'user/logout';
-          } 
-        } 
-      }      
+          }
+        }
+      }
     );
   return;
-  
+
   var t_args  = {'!site_name' : Drupal.settings.fbconnect.invite_name};
   var buttons = [
       {
@@ -75,11 +87,11 @@ Drupal.fbconnect.logout = function() {
 
 Drupal.fbconnect.reloadIfUserConnected = function(state) {
   var user = Drupal.settings.fbconnect.user;
-  
+
   if (!state.authResponse || user.uid) {
     return;
   }
-  
+
   if (state.authResponse.uid != user.fbuid) {
     window.location.reload();
   }
@@ -91,33 +103,33 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
   var basePath      = Drupal.settings.basePath;
   var logout_url    = basePath + 'user/logout';
   var links         = jQuery('a[href='+ logout_url +']', context).not('.fbconnect-logout-link');
-  
+
   if (loginout_mode == 'manual') {
     return;
   }
-  
+
   if (!user.uid) {
     // User is anonymous.
     return;
   }
-  
+
   if (!user.fbuid) {
     // User is not related to facebook.
   }
-  
+
   links.addClass('fbconnect-logout-link').bind('click',function() {
-    
+
     FB.getLoginStatus(function(response) {
       if (response.authResponse) {
         // User is logged in and connected to facebook.
         var fbuid = response.authResponse.userID;
-      } 
+      }
       else {
         // No user session available.
         return;
       }
-    });    
-    
+    });
+
     if (loginout_mode == 'auto') {
       // Logout from Facebook.
       FB.logout(function(response) {
@@ -127,14 +139,14 @@ Drupal.fbconnect.initLogoutLinks = function(context) {
     else {
       // Disable link.
       Drupal.fbconnect.logout();
-      return false;  
+      return false;
     }
   });
 };
 
 /**
  * Fast registration.
- * 
+ *
  * @see fbconnect_prompt_page().
  */
 Drupal.fbconnect.DoFastRegistration =  function(link) {
