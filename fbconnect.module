@@ -375,10 +375,7 @@ function facebook_client_load_include() {
       watchdog('fbconnect', t('Unable to load the required Facebook library, please check the README.txt for instructions on how to resolve this.'));
     }
   }
-  if  (class_exists('Facebook') && defined('Facebook::VERSION')) {
-    return TRUE;
-  }
-  throw new Exception('Facebook library not found.');
+  return class_exists('Facebook') && defined('Facebook::VERSION');
 }
 
 /**
@@ -417,6 +414,9 @@ function facebook_client() {
 function fbconnect_user_profile() {
   $user_profile = NULL;
   $client = facebook_client();
+  if (!$client) {
+    return;
+  }
   $user = $client->getUser();
   if ($user) {
     try {
