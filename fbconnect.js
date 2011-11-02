@@ -19,10 +19,10 @@ Drupal.fbconnect.init = function () {
       });
     }
     Drupal.fbconnect.initLogoutLinks(context);
-
+    
     var loginout_mode = Drupal.settings.fbconnect.loginout_mode;
     var user          = Drupal.settings.fbconnect.user;
-
+  
     if (loginout_mode == 'auto' && !user.uid) {
       FB.getLoginStatus(function(response) {
         if (response.authResponse) {
@@ -30,7 +30,7 @@ Drupal.fbconnect.init = function () {
           Drupal.fbconnect.onLogin();
         }
       });
-    }
+    }     
   }
 
   if (Drupal.settings.fbconnect.loginout_mode == 'auto') {
