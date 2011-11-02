@@ -128,7 +128,7 @@ Drupal.fbconnect.DoFastRegistration =  function(link) {
   }, {scope:'email'});
 };
 
-function facebook_onlogin_ready() {
+Drupal.fbconnect.onLogin = function() {
   jQuery("#fbconnect-autoconnect-form").submit();
 }
 

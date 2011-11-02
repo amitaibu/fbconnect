@@ -321,7 +321,7 @@ function fbconnect_render_button($attr = array(), $op = null) {
   if ($op == 'register') {
     $attr += array(
       'scope' => array('email'),
-      'onlogin' => 'facebook_onlogin_ready();',
+      'onlogin' => 'Drupal.fbconnect.onLogin();',
     );
   }
 
@@ -523,10 +523,17 @@ function fbconnect_render_js() {
  * Implements hook_page_alter().
  */
 function fbconnect_page_alter(&$page) {
+  global $user;
   if (facebook_client() && !_fbconnect_is_excluded_page($_GET['q']) && !variable_get('fbconnect_noroot')) {
     $config = fbconnect_get_config();
+    if (!$user->uid && $config['loginout_mode'] == 'auto') {
+      // Add hidden form, so we can login via Javascript.
+      // This form will be submitted upon clicking "Connect" - when the 
+      // user has just approved the site, but is still not logged in.
+      $page['page_bottom']['fn_autoconnect'] = drupal_get_form('fbconnect_autoconnect_form');
+    }
     $channel_uri = preg_replace("@'@msi", "\'", "http://" . $_SERVER['HTTP_HOST'] . "/" . drupal_get_path('module', 'fbconnect') . "/channel.html");
-    $page['page_bottom']['fb-init-code'] = array(
+    $page['page_bottom']['fb_init_code'] = array(
       '#type' => 'markup',
       '#markup' => '<div id="fb-root"></div>
       <script type="text/javascript">

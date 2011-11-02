@@ -97,10 +97,9 @@ function fbconnect_register_page($form, $form_state = array()) {
     // Redirect user to the login page with a message..
     drupal_set_message(t('This email address is already registered to an account. Please log in to this account with the username and password provided during registration'));
     $options = array('query' => array(
-      'fbconnect' => 'true'
+      'fbconnect' => TRUE,
     ));
     drupal_goto('user/login', $options);
-    return;
   }
 
   $form = drupal_retrieve_form('user_register_form', $form_state);
