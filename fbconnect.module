@@ -535,6 +535,8 @@ function fbconnect_page_alter(&$page) {
             channelURL: \'' . $channel_uri . '\',
             oauth  : true
           });
+          // Fix for IE7.
+          FB.UIServer.setLoadedNode = function(a,b){FB.UIServer._loadedNodes[a.id]=b;};
           // whenever the user logs in, we tell our login service
           FB.Event.subscribe(\'auth.login\', function() {
             window.location.reload();
